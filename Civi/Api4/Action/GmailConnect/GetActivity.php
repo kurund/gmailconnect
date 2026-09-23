@@ -25,12 +25,7 @@ class GetActivity extends AbstractAction {
   protected $messageId;
 
   public function _run(Result $result): void {
-    $messageId = trim($this->messageId);
-    if (empty($messageId)) {
-      throw new \CRM_Core_Exception('messageId is required.');
-    }
-
-    $activityId = Helper::findActivityIdByMessageId($messageId);
+    $activityId = Helper::findActivityIdByMessageId(trim($this->messageId));
     if ($activityId) {
       $result[] = [
         'id' => $activityId,

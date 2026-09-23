@@ -26,12 +26,7 @@ class GetContact extends AbstractAction {
   protected $email;
 
   public function _run(Result $result): void {
-    $email = trim($this->email);
-    if (empty($email)) {
-      throw new \CRM_Core_Exception('email is required.');
-    }
-
-    $contact = Helper::findContactByEmail($email);
+    $contact = Helper::findContactByEmail(trim($this->email));
     if ($contact) {
       $result[] = [
         'id' => $contact['id'],

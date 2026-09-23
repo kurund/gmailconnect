@@ -17,7 +17,7 @@ class CRM_Gmailconnect_Page_Settings extends CRM_Core_Page {
     $contact = NULL;
     if ($contactId) {
       $contact = \Civi\Api4\Contact::get(FALSE)
-        ->addSelect('id', 'display_name', 'is_deleted')
+        ->addSelect('id', 'display_name', 'is_deleted', 'api_key')
         ->addWhere('id', '=', $contactId)
         ->execute()
         ->first();
@@ -26,19 +26,11 @@ class CRM_Gmailconnect_Page_Settings extends CRM_Core_Page {
     if ($contact) {
       $ufId = CRM_Core_BAO_UFMatch::getUFId($contactId);
       $user = $ufId ? get_userdata($ufId) : NULL;
-      $this->assign('contact', [
-        'id' => $contactId,
-        'display_name' => $contact['display_name'],
-        'is_deleted' => $contact['is_deleted'],
-        'url' => Helper::contactUrl($contactId),
-        'api_key' => CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_Contact', $contactId, 'api_key'),
-        'user_login' => $user ? $user->user_login : NULL,
-        'user_email' => $user ? $user->user_email : NULL,
-      ]);
+      $contact['url'] = Helper::contactUrl($contactId);
+      $contact['user_login'] = $user->user_login ?? NULL;
+      $contact['user_email'] = $user->user_email ?? NULL;
     }
-    else {
-      $this->assign('contact', NULL);
-    }
+    $this->assign('contact', $contact);
 
     $this->assign('siteUrl', rtrim(CRM_Core_Config::singleton()->userFrameworkBaseURL, '/'));
 

@@ -82,7 +82,21 @@ class RecordActivity extends AbstractAction {
       throw new \CRM_Core_Exception('messageId must be at most 255 characters.');
     }
 
-    [$from, $targets] = $this->parseAddresses();
+    $from = Helper::parseAddress($this->from);
+    if (!$from) {
+      throw new \CRM_Core_Exception("Invalid from email: {$this->from}");
+    }
+    $targets = [];
+    foreach (array_merge($this->to, $this->cc, $this->bcc) as $address) {
+      if (empty(trim($address))) {
+        continue;
+      }
+      $target = Helper::parseAddress($address);
+      if (!$target) {
+        throw new \CRM_Core_Exception("Invalid email: $address");
+      }
+      $targets[] = $target;
+    }
 
     // use lock to prevent duplicate creation
     $lock = Helper::lock();
@@ -131,57 +145,6 @@ class RecordActivity extends AbstractAction {
       'url' => Helper::activityUrl($activityId),
       'created' => $created,
     ];
-  }
-
-  /**
-   * Parse the from, to, cc and bcc addresses.
-   *
-   * Addresses are parsed with the CiviCRM core email parser and names split with
-   * CRM_Utils_String::extractName() like the core email processor.
-   * Targets are de-duped by email
-   *
-   * @return array [$from, $targets], each address as ['email' => string, 'name' => array]
-   */
-  private function parseAddresses(): array {
-    $addresses = [['from', $this->from]];
-    foreach (['to', 'cc', 'bcc'] as $param) {
-      foreach ($this->$param as $address) {
-        $addresses[] = [$param, $address];
-      }
-    }
-
-    $from = NULL;
-    $targets = [];
-    $invalid = [];
-    foreach ($addresses as [$param, $address]) {
-      if (!is_string($address)) {
-        throw new \CRM_Core_Exception("$param must contain email addresses.");
-      }
-      if ($param !== 'from' && empty(trim($address))) {
-        continue;
-      }
-
-      $parsed = Helper::parseAddress($address);
-      if (!$parsed) {
-        $invalid[] = $address;
-        continue;
-      }
-
-      if ($param === 'from') {
-        $from = $parsed;
-      }
-      else {
-        $key = strtolower($parsed['email']);
-        if (!isset($targets[$key])) {
-          $targets[$key] = $parsed;
-        }
-      }
-    }
-
-    if ($invalid) {
-      throw new \CRM_Core_Exception('Invalid email(s): ' . implode(', ', $invalid));
-    }
-    return [$from, array_values($targets)];
   }
 
 }

@@ -13,7 +13,6 @@ class CRM_Gmailconnect_Upgrader extends CRM_Extension_Upgrader_Base {
 
   /**
    * WordPress capabilities granted to the Gmail Connect role
-   *
    */
   private const ROLE_CAPABILITIES = [
     'read' => TRUE,
@@ -40,7 +39,7 @@ class CRM_Gmailconnect_Upgrader extends CRM_Extension_Upgrader_Base {
     CRM_Core_Session::setStatus(
       E::ts('The Gmail Connect user (contact ID %1) was set up with API key: <code>%2</code>. You can view it again under Administer &raquo; System Settings &raquo; Gmail Connect Settings.', [
         1 => $contactId,
-        2 => htmlspecialchars($apiKey),
+        2 => $apiKey,
       ]),
       E::ts('Gmail Connect installed'),
       'success',
