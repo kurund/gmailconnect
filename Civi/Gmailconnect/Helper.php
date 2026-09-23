@@ -1,0 +1,120 @@
+<?php
+declare(strict_types = 1);
+
+namespace Civi\Gmailconnect;
+
+/**
+ * Helper functions for the Gmail Connect extension
+ */
+class Helper {
+
+  /**
+   * WordPress role assigned to the Gmail Connect user
+   */
+  public const ROLE = 'gmail_connect';
+
+  /**
+   * Activity type used for emails logged using this extension
+   */
+  public const ACTIVITY_TYPE = 'External_Email';
+
+  /**
+   * Custom field for storing RFC 822 Message-ID header
+   */
+  public const MESSAGE_ID_FIELD = 'External_Email_Details.MessageID';
+
+  /**
+   * Find the first contact with the matching email
+   *
+   * @param string $email
+   *
+   * @return array|null Contact with id and display_name or NULL if not found
+   */
+  public static function findContactByEmail(string $email): ?array {
+    return \Civi\Api4\Contact::get(FALSE)
+      ->addSelect('id', 'display_name')
+      ->addJoin('Email AS email', 'INNER', ['email.contact_id', '=', 'id'])
+      ->addWhere('email.email', '=', $email)
+      ->addWhere('is_deleted', '=', FALSE)
+      ->addOrderBy('id', 'ASC')
+      ->setLimit(1)
+      ->execute()
+      ->first();
+  }
+
+  /**
+   * Find the first contact with the matching email or create an
+   * Individual with it as their primary email
+   *
+   * @param string $email
+   * @param array $name
+   *   Name fields for a new contact: first_name, middle_name, last_name
+   *
+   * @return array ['id' => int, 'created' => bool]
+   */
+  public static function findOrCreateContactByEmail(string $email, array $name = []): array {
+    $contactId = self::findContactByEmail($email)['id'] ?? NULL;
+    if ($contactId) {
+      return ['id' => (int) $contactId, 'created' => FALSE];
+    }
+
+    $contactId = \Civi\Api4\Contact::create(FALSE)
+      ->setValues([
+        'contact_type' => 'Individual',
+        'email_primary.email' => $email,
+      ] + array_intersect_key($name, array_flip(['first_name', 'middle_name', 'last_name'])))
+      ->execute()
+      ->first()['id'];
+    return ['id' => (int) $contactId, 'created' => TRUE];
+  }
+
+  /**
+   * Acquire the lock shared by all write endpoints, so concurrent requests
+   * cannot create duplicate activities or contacts. Throws if it cannot be
+   * acquired within 10 seconds
+   */
+  public static function lock(): \Civi\Core\Lock\LockInterface {
+    $lock = \Civi::lockManager()->acquire('data.gmailconnect.write', 10);
+    if (!$lock->isAcquired()) {
+      throw new \CRM_Core_Exception('Could not acquire Gmail Connect lock, please retry.');
+    }
+    return $lock;
+  }
+
+  /**
+   * Find the External Email activity with the given MessageID
+   *
+   * @param string $messageId
+   *
+   * @return int|null
+   */
+  public static function findActivityIdByMessageId(string $messageId): ?int {
+    $id = \Civi\Api4\Activity::get(FALSE)
+      ->addSelect('id')
+      ->addWhere('activity_type_id:name', '=', self::ACTIVITY_TYPE)
+      ->addWhere(self::MESSAGE_ID_FIELD, '=', $messageId)
+      ->addWhere('is_deleted', '=', FALSE)
+      ->addOrderBy('id', 'ASC')
+      ->setLimit(1)
+      ->execute()
+      ->first()['id'] ?? NULL;
+    return $id ? (int) $id : NULL;
+  }
+
+  /**
+   * Absolute URL to view an activity in CiviCRM
+   */
+  public static function activityUrl(int $activityId): string {
+    return (string) \Civi::url('backend://civicrm/activity', 'a')
+      ->addQuery(['action' => 'view', 'reset' => 1, 'id' => $activityId]);
+  }
+
+  /**
+   * Absolute URL to view a contact in CiviCRM
+   */
+  public static function contactUrl(int $contactId): string {
+    return (string) \Civi::url('backend://civicrm/contact/view', 'a')
+      ->addQuery(['reset' => 1, 'cid' => $contactId]);
+  }
+
+}
