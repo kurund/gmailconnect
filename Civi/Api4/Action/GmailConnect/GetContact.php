@@ -26,17 +26,17 @@ class GetContact extends AbstractAction {
   protected $email;
 
   public function _run(Result $result): void {
-    $email = trim((string) $this->email);
-    if ($email === '') {
+    $email = trim($this->email);
+    if (empty($email)) {
       throw new \CRM_Core_Exception('email is required.');
     }
 
     $contact = Helper::findContactByEmail($email);
     if ($contact) {
       $result[] = [
-        'id' => (int) $contact['id'],
+        'id' => $contact['id'],
         'display_name' => $contact['display_name'],
-        'url' => Helper::contactUrl((int) $contact['id']),
+        'url' => Helper::contactUrl($contact['id']),
       ];
     }
   }

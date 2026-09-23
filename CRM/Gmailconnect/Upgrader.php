@@ -16,9 +16,9 @@ class CRM_Gmailconnect_Upgrader extends CRM_Extension_Upgrader_Base {
    *
    */
   private const ROLE_CAPABILITIES = [
-    'read',
-    'access_gmail_connect_endpoints',
-    'authenticate_with_api_key',
+    'read' => TRUE,
+    'access_gmail_connect_endpoints' => TRUE,
+    'authenticate_with_api_key' => TRUE,
   ];
 
   public function postInstall(): void {
@@ -55,11 +55,11 @@ class CRM_Gmailconnect_Upgrader extends CRM_Extension_Upgrader_Base {
   private function createRole(): void {
     $role = get_role(Helper::ROLE);
     if (!$role) {
-      add_role(Helper::ROLE, 'Gmail Connect', array_fill_keys(self::ROLE_CAPABILITIES, TRUE));
+      add_role(Helper::ROLE, 'Gmail Connect', self::ROLE_CAPABILITIES);
       return;
     }
-    foreach (self::ROLE_CAPABILITIES as $capability) {
-      $role->add_cap($capability);
+    foreach (self::ROLE_CAPABILITIES as $capability => $grant) {
+      $role->add_cap($capability, $grant);
     }
   }
 
@@ -95,7 +95,7 @@ class CRM_Gmailconnect_Upgrader extends CRM_Extension_Upgrader_Base {
     if (is_wp_error($userId)) {
       throw new CRM_Core_Exception('Gmail Connect: could not create WordPress user: ' . $userId->get_error_message());
     }
-    return (int) $userId;
+    return $userId;
   }
 
   /**
@@ -111,7 +111,7 @@ class CRM_Gmailconnect_Upgrader extends CRM_Extension_Upgrader_Base {
     if (!$contactId) {
       throw new CRM_Core_Exception('Gmail Connect: could not find the contact for WordPress user ' . $userId);
     }
-    return (int) $contactId;
+    return $contactId;
   }
 
   /**

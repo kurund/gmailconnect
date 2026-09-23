@@ -20,8 +20,8 @@
         <td>{if $contact.api_key}<code>{$contact.api_key|escape}</code>{else}<em>{ts}Not set{/ts}</em>{/if}</td>
       </tr>
       <tr>
-        <td class="label">{ts}Endpoint base URL{/ts}</td>
-        <td><code>{$endpointUrl|escape}</code></td>
+        <td class="label">{ts}Site URL{/ts}</td>
+        <td><code>{$siteUrl|escape}</code><br/><span class="description">{ts}Enter this and the API key in the CiviCRM Connect Gmail add-on.{/ts}</span></td>
       </tr>
     </table>
   {else}

@@ -10,6 +10,9 @@ use Civi\Gmailconnect\Helper;
 /**
  * Create an individual with the given email
  *
+ * The email may include a name e.g. "Jane Doe <jane@doe.com>" which is
+ * used for the new contact unless firstName or lastName is given
+ *
  * If contact already exist with the email nothing is created and
  * the first matching contact is returned with created = FALSE
  *
@@ -32,7 +35,7 @@ class AddContact extends AbstractAction {
   protected $lastName = '';
 
   /**
-   * Email address
+   * Email address e.g. "Jane Doe <jane@doe.com>" or "jane@doe.com"
    *
    * @var string
    * @required
@@ -40,18 +43,22 @@ class AddContact extends AbstractAction {
   protected $email;
 
   public function _run(Result $result): void {
-    $email = trim((string) $this->email);
-    if (!\CRM_Utils_Rule::email($email)) {
+    $address = Helper::parseAddress($this->email);
+    if (!$address) {
       throw new \CRM_Core_Exception('A valid email is required.');
+    }
+
+    $name = $address['name'];
+    $firstName = trim($this->firstName);
+    $lastName = trim($this->lastName);
+    if (!empty($firstName) || !empty($lastName)) {
+      $name = ['first_name' => $firstName, 'last_name' => $lastName];
     }
 
     // add lock to prevent duplicate contact creation
     $lock = Helper::lock();
     try {
-      $contact = Helper::findOrCreateContactByEmail($email, [
-        'first_name' => trim((string) $this->firstName),
-        'last_name' => trim((string) $this->lastName),
-      ]);
+      $contact = Helper::findOrCreateContactByEmail($address['email'], $name);
     }
     finally {
       $lock->release();

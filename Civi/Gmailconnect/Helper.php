@@ -43,29 +43,55 @@ class Helper {
   }
 
   /**
+   * Parse email address
+   * Email might be "Jane Doe <jane@doe.com>" or "jane@doe.com"
+   *
+   * @param string $address
+   *
+   * @return array|null
+   *   ['email' => string, 'name' => array] with name fields first_name,
+   *   middle_name, last_name or NULL if the email is invalid
+   */
+  public static function parseAddress(string $address): ?array {
+    $parsed = \ezcMailTools::parseEmailAddress(trim($address));
+    if (!$parsed || !\CRM_Utils_Rule::email($parsed->email)) {
+      return NULL;
+    }
+
+    $name = [];
+    // Some clients repeat the email as the name
+    if (strcasecmp(trim($parsed->name), $parsed->email) !== 0) {
+      \CRM_Utils_String::extractName($parsed->name, $name);
+    }
+    return ['email' => $parsed->email, 'name' => $name];
+  }
+
+  /**
    * Find the first contact with the matching email or create an
    * Individual with it as their primary email
    *
    * @param string $email
-   * @param array $name
-   *   Name fields for a new contact: first_name, middle_name, last_name
+   * @param array $name Name fields for a new contact: first_name, middle_name, last_name
    *
    * @return array ['id' => int, 'created' => bool]
    */
   public static function findOrCreateContactByEmail(string $email, array $name = []): array {
     $contactId = self::findContactByEmail($email)['id'] ?? NULL;
     if ($contactId) {
-      return ['id' => (int) $contactId, 'created' => FALSE];
+      return ['id' => $contactId, 'created' => FALSE];
     }
 
     $contactId = \Civi\Api4\Contact::create(FALSE)
       ->setValues([
         'contact_type' => 'Individual',
+        'first_name' => $name['first_name'] ?? '',
+        'middle_name' => $name['middle_name'] ?? '',
+        'last_name' => $name['last_name'] ?? '',
         'email_primary.email' => $email,
-      ] + array_intersect_key($name, array_flip(['first_name', 'middle_name', 'last_name'])))
+      ])
       ->execute()
       ->first()['id'];
-    return ['id' => (int) $contactId, 'created' => TRUE];
+    return ['id' => $contactId, 'created' => TRUE];
   }
 
   /**
@@ -89,7 +115,7 @@ class Helper {
    * @return int|null
    */
   public static function findActivityIdByMessageId(string $messageId): ?int {
-    $id = \Civi\Api4\Activity::get(FALSE)
+    return \Civi\Api4\Activity::get(FALSE)
       ->addSelect('id')
       ->addWhere('activity_type_id:name', '=', self::ACTIVITY_TYPE)
       ->addWhere(self::MESSAGE_ID_FIELD, '=', $messageId)
@@ -98,7 +124,6 @@ class Helper {
       ->setLimit(1)
       ->execute()
       ->first()['id'] ?? NULL;
-    return $id ? (int) $id : NULL;
   }
 
   /**

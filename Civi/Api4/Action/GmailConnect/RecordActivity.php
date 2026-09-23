@@ -74,8 +74,8 @@ class RecordActivity extends AbstractAction {
   protected $messageId;
 
   public function _run(Result $result): void {
-    $messageId = trim((string) $this->messageId);
-    if ($messageId === '') {
+    $messageId = trim($this->messageId);
+    if (empty($messageId)) {
       throw new \CRM_Core_Exception('messageId is required.');
     }
     if (mb_strlen($messageId) > 255) {
@@ -91,27 +91,34 @@ class RecordActivity extends AbstractAction {
       $created = FALSE;
 
       if (!$activityId) {
-        \CRM_Core_Transaction::create()->run(function() use ($messageId, $from, $targets, &$activityId) {
+        // add transaction as we are doing mutiple things here
+        $transaction = new \CRM_Core_Transaction();
+        try {
           $sourceContactId = Helper::findOrCreateContactByEmail($from['email'], $from['name'])['id'];
           $targetContactIds = [];
           foreach ($targets as $target) {
             $targetContactIds[] = Helper::findOrCreateContactByEmail($target['email'], $target['name'])['id'];
           }
 
-          $activityId = (int) Activity::create(FALSE)
+          $activityId = Activity::create(FALSE)
             ->setValues([
               'activity_type_id:name' => Helper::ACTIVITY_TYPE,
               'status_id:name' => 'Completed',
               'activity_date_time' => date('Y-m-d H:i:s'),
-              'subject' => mb_substr((string) $this->subject, 0, 255),
-              'details' => (string) $this->details,
+              'subject' => mb_substr($this->subject, 0, 255),
+              'details' => $this->details,
               'source_contact_id' => $sourceContactId,
               'target_contact_id' => array_values(array_unique($targetContactIds)),
               Helper::MESSAGE_ID_FIELD => $messageId,
             ])
             ->execute()
             ->first()['id'];
-        });
+        }
+        catch (\Throwable $e) {
+          $transaction->rollback()->commit();
+          throw $e;
+        }
+        $transaction->commit();
         $created = TRUE;
       }
     }
@@ -138,7 +145,7 @@ class RecordActivity extends AbstractAction {
   private function parseAddresses(): array {
     $addresses = [['from', $this->from]];
     foreach (['to', 'cc', 'bcc'] as $param) {
-      foreach ((array) $this->$param as $address) {
+      foreach ($this->$param as $address) {
         $addresses[] = [$param, $address];
       }
     }
@@ -150,28 +157,24 @@ class RecordActivity extends AbstractAction {
       if (!is_string($address)) {
         throw new \CRM_Core_Exception("$param must contain email addresses.");
       }
-      if ($param !== 'from' && trim($address) === '') {
+      if ($param !== 'from' && empty(trim($address))) {
         continue;
       }
 
-      $parsed = \ezcMailTools::parseEmailAddress(trim($address));
-      if (!$parsed || !\CRM_Utils_Rule::email($parsed->email)) {
+      $parsed = Helper::parseAddress($address);
+      if (!$parsed) {
         $invalid[] = $address;
         continue;
       }
-
-      $name = [];
-      // Some clients repeat the email as the name
-      if (strcasecmp(trim((string) $parsed->name), $parsed->email) !== 0) {
-        \CRM_Utils_String::extractName((string) $parsed->name, $name);
-      }
-      $parsed = ['email' => $parsed->email, 'name' => $name];
 
       if ($param === 'from') {
         $from = $parsed;
       }
       else {
-        $targets[strtolower($parsed['email'])] ??= $parsed;
+        $key = strtolower($parsed['email']);
+        if (!isset($targets[$key])) {
+          $targets[$key] = $parsed;
+        }
       }
     }
 

@@ -25,8 +25,8 @@ class GetActivity extends AbstractAction {
   protected $messageId;
 
   public function _run(Result $result): void {
-    $messageId = trim((string) $this->messageId);
-    if ($messageId === '') {
+    $messageId = trim($this->messageId);
+    if (empty($messageId)) {
       throw new \CRM_Core_Exception('messageId is required.');
     }
 
