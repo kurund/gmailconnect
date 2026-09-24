@@ -1,9 +1,16 @@
 <?xml version="1.0"?>
 <menu>
   <item>
-    <path>civicrm/admin/gmailconnect</path>
-    <page_callback>CRM_Gmailconnect_Page_Settings</page_callback>
-    <title>Gmail Connect Settings</title>
-    <access_arguments>administer CiviCRM</access_arguments>
+    <path>civicrm/gmailconnect</path>
+    <page_callback>CRM_Gmailconnect_Page_Endpoint</page_callback>
+    <title>Gmail Connect</title>
+    <access_callback>1</access_callback>
+    <is_public>true</is_public>
+  </item>
+  <item>
+    <path>civicrm/gmailconnect/settings</path>
+    <page_callback>CRM_Gmailconnect_Form_Settings</page_callback>
+    <title>Gmail Connect</title>
+    <access_arguments>access Gmail Connect endpoints</access_arguments>
   </item>
 </menu>

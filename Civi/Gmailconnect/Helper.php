@@ -9,11 +9,6 @@ namespace Civi\Gmailconnect;
 class Helper {
 
   /**
-   * WordPress role assigned to the Gmail Connect user
-   */
-  public const ROLE = 'gmail_connect';
-
-  /**
    * Activity type used for emails logged using this extension
    */
   public const ACTIVITY_TYPE = 'External_Email';
@@ -124,6 +119,52 @@ class Helper {
       ->setLimit(1)
       ->execute()
       ->first()['id'] ?? NULL;
+  }
+
+  /**
+   * The contact's token, created on first use
+   */
+  public static function getToken(int $contactId): string {
+    $token = \Civi\Api4\GmailConnectToken::get(FALSE)
+      ->addSelect('token')
+      ->addWhere('contact_id', '=', $contactId)
+      ->execute()
+      ->first()['token'] ?? NULL;
+    return $token ?? self::regenerateToken($contactId);
+  }
+
+  /**
+   * Replace the contact's token with a new one, so the old one stops working
+   */
+  public static function regenerateToken(int $contactId): string {
+    $token = \CRM_Utils_String::createRandom(64, \CRM_Utils_String::ALPHANUMERIC);
+    \Civi\Api4\GmailConnectToken::save(FALSE)
+      ->addRecord(['contact_id' => $contactId, 'token' => $token])
+      ->setMatch(['contact_id'])
+      ->execute();
+    return $token;
+  }
+
+  /**
+   * Contact the token belongs to, or NULL if the token is unknown
+   */
+  public static function findContactIdByToken(string $token): ?int {
+    if (empty($token)) {
+      return NULL;
+    }
+    return \Civi\Api4\GmailConnectToken::get(FALSE)
+      ->addSelect('contact_id')
+      ->addWhere('token', '=', $token)
+      ->execute()
+      ->first()['contact_id'] ?? NULL;
+  }
+
+  /**
+   * The contact's personal endpoint URL, to copy into the Gmail add-on
+   */
+  public static function endpointUrl(string $token): string {
+    return (string) \Civi::url('frontend://civicrm/gmailconnect', 'a')
+      ->addQuery(['token' => $token]);
   }
 
   /**

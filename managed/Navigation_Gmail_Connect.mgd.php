@@ -13,11 +13,12 @@ return [
     'params' => [
       'version' => 4,
       'values' => [
-        'label' => E::ts('Gmail Connect Settings'),
+        'label' => E::ts('Gmail Connect'),
         'name' => 'gmailconnect_settings',
-        'url' => 'civicrm/admin/gmailconnect',
-        'permission' => ['administer CiviCRM'],
-        'parent_id.name' => 'System Settings',
+        'url' => 'civicrm/gmailconnect/settings?reset=1',
+        'permission' => ['access Gmail Connect endpoints'],
+        'parent_id.name' => 'Contacts',
+        'is_active' => TRUE,
       ],
       'match' => ['name', 'domain_id'],
     ],
