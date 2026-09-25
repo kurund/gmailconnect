@@ -34,8 +34,6 @@ class CRM_Gmailconnect_Page_Endpoint extends CRM_Core_Page {
     if (!$contactId) {
       return [401, ['error' => 'Invalid token.']];
     }
-    // Without a linked CMS user the permission check would fall back to the
-    // anonymous user
     if (!CRM_Core_BAO_UFMatch::getUFId($contactId) || !CRM_Core_Permission::check('access Gmail Connect endpoints', $contactId)) {
       return [403, ['error' => 'You do not have permission to use Gmail Connect.']];
     }
@@ -47,8 +45,6 @@ class CRM_Gmailconnect_Page_Endpoint extends CRM_Core_Page {
       return [400, ['error' => 'Unknown action or invalid params.']];
     }
 
-    // Run as the token's contact for this request only, without a session
-    // that could be reused
     CRM_Core_Session::useFakeSession();
     CRM_Core_Session::singleton()->set('userID', $contactId);
 

@@ -8,8 +8,7 @@ use Civi\Api4\Generic\Result;
 use Civi\Gmailconnect\Helper;
 
 /**
- * Everything the add-on shows for an opened email in one call: whether the
- * email is already recorded and the contact for each email address
+ * Whether the email is already recorded and the contact for each email address
  *
  * Returns one row: activity ({id, url} or NULL), contacts (lowercased
  * email => {id, display_name, url}, only for emails that match a contact) and

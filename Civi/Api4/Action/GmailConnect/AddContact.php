@@ -55,7 +55,6 @@ class AddContact extends AbstractAction {
       $name = ['first_name' => $firstName, 'last_name' => $lastName];
     }
 
-    // add lock to prevent duplicate contact creation
     $lock = Helper::lock();
     try {
       $contact = Helper::findOrCreateContactByEmail($address['email'], $name);

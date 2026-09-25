@@ -5,8 +5,8 @@ use Civi\Gmailconnect\Helper;
 use CRM_Gmailconnect_ExtensionUtil as E;
 
 /**
- * Shows the logged-in contact their personal Gmail Connect URL, to copy into
- * the CiviCRM Connect Gmail add-on, and lets them regenerate it
+ * Shows the logged-in contact their personal Gmail Connect URL and lets them
+ * regenerate it
  */
 class CRM_Gmailconnect_Form_Settings extends CRM_Core_Form {
 

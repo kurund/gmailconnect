@@ -98,14 +98,12 @@ class RecordActivity extends AbstractAction {
       $targets[] = $target;
     }
 
-    // use lock to prevent duplicate creation
     $lock = Helper::lock();
     try {
       $activityId = Helper::findActivityIdByMessageId($messageId);
       $created = FALSE;
 
       if (!$activityId) {
-        // add transaction as we are doing mutiple things here
         $transaction = new \CRM_Core_Transaction();
         try {
           $sourceContactId = Helper::findOrCreateContactByEmail($from['email'], $from['name'])['id'];

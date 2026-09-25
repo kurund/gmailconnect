@@ -3,8 +3,6 @@ declare(strict_types = 1);
 
 use CRM_Gmailconnect_ExtensionUtil as E;
 
-// Add new activity type and custom group specific to
-// this activity type
 return [
   [
     'name' => 'OptionValue_External_Email',

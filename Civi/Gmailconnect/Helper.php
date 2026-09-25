@@ -54,7 +54,6 @@ class Helper {
     }
 
     $name = [];
-    // Some clients repeat the email as the name
     if (strcasecmp(trim($parsed->name), $parsed->email) !== 0) {
       \CRM_Utils_String::extractName($parsed->name, $name);
     }
@@ -90,9 +89,7 @@ class Helper {
   }
 
   /**
-   * Acquire the lock shared by all write endpoints, so concurrent requests
-   * cannot create duplicate activities or contacts. Throws if it cannot be
-   * acquired within 10 seconds
+   * Acquire the lock shared by all write endpoints, waiting up to 10 seconds
    */
   public static function lock(): \Civi\Core\Lock\LockInterface {
     $lock = \Civi::lockManager()->acquire('data.gmailconnect.write', 10);
@@ -134,7 +131,7 @@ class Helper {
   }
 
   /**
-   * Replace the contact's token with a new one, so the old one stops working
+   * Replace the contact's token with a new one
    */
   public static function regenerateToken(int $contactId): string {
     $token = \CRM_Utils_String::createRandom(64, \CRM_Utils_String::ALPHANUMERIC);
@@ -160,7 +157,7 @@ class Helper {
   }
 
   /**
-   * The contact's personal endpoint URL, to copy into the Gmail add-on
+   * The contact's personal endpoint URL
    */
   public static function endpointUrl(string $token): string {
     return (string) \Civi::url('frontend://civicrm/gmailconnect', 'a')

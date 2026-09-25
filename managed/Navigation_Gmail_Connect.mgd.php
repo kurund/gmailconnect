@@ -3,7 +3,6 @@ declare(strict_types = 1);
 
 use CRM_Gmailconnect_ExtensionUtil as E;
 
-// add navigation menu item
 return [
   [
     'name' => 'Navigation_Gmail_Connect_Settings',
