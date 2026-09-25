@@ -30,7 +30,7 @@ class CRM_Gmailconnect_Page_Endpoint extends CRM_Core_Page {
     }
 
     $token = $_SERVER['HTTP_X_GMAIL_CONNECT_TOKEN'] ?? $_GET['token'] ?? '';
-    $contactId = Helper::findContactIdByToken((string) $token);
+    $contactId = Helper::findContactIdByToken($token);
     if (!$contactId) {
       return [401, ['error' => 'Invalid token.']];
     }
@@ -54,7 +54,7 @@ class CRM_Gmailconnect_Page_Endpoint extends CRM_Core_Page {
 
     try {
       $params['checkPermissions'] = FALSE;
-      return [200, ['values' => (array) civicrm_api4('GmailConnect', $action, $params)]];
+      return [200, ['values' => civicrm_api4('GmailConnect', $action, $params)->getArrayCopy()]];
     }
     catch (\Civi\Core\Exception\DBQueryException $e) {
       return $this->serverError($e);

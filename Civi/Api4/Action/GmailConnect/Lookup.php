@@ -11,8 +11,9 @@ use Civi\Gmailconnect\Helper;
  * Everything the add-on shows for an opened email in one call: whether the
  * email is already recorded and the contact for each email address
  *
- * Returns one row: activity ({id, url} or NULL) and contacts (lowercased
- * email => {id, display_name, url}, only for emails that match a contact)
+ * Returns one row: activity ({id, url} or NULL), contacts (lowercased
+ * email => {id, display_name, url}, only for emails that match a contact) and
+ * user ({id, display_name} of the contact making the request, or NULL)
  *
  * @package gmailconnect
  */
@@ -51,7 +52,13 @@ class Lookup extends AbstractAction {
       }
     }
 
-    $result[] = ['activity' => $activity, 'contacts' => (object) $contacts];
+    $user = NULL;
+    $userId = \CRM_Core_Session::getLoggedInContactID();
+    if ($userId) {
+      $user = ['id' => $userId, 'display_name' => \CRM_Contact_BAO_Contact::displayName($userId)];
+    }
+
+    $result[] = ['activity' => $activity, 'contacts' => $contacts, 'user' => $user];
   }
 
 }
