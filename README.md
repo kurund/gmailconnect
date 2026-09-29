@@ -19,14 +19,9 @@ To use the Gmail add-on:
 
 1. Give staff the `access Gmail Connect endpoints` permission. They need a
    CMS user account linked to their contact.
-2. Each person goes to **Contacts » Gmail Connect**
+2. Each person goes to **Contacts >> Gmail Connect**
    (`civicrm/gmailconnect/settings`) and copies their personal URL into the
-   add-on. The token in it is created on their first visit.
-3. **Regenerate URL** on the same page replaces the token; the old URL stops
-   working immediately.
-
-Uninstalling drops the token table. The activity type, its custom field and
-recorded activities are kept.
+   add-on.
 
 ## Known Issues
 

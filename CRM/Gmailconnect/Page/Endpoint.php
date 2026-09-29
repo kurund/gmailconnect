@@ -6,10 +6,6 @@ use Civi\Gmailconnect\Helper;
 /**
  * Single endpoint called by the CiviCRM Connect Gmail add-on
  *
- * POST with a JSON body {"action": "...", "params": {...}} and the contact's
- * token in the X-Gmail-Connect-Token header (or a token query parameter).
- * The action runs as the token's contact. Responds with {"values": [...]}
- * or {"error": "..."}.
  */
 class CRM_Gmailconnect_Page_Endpoint extends CRM_Core_Page {
 
@@ -22,18 +18,22 @@ class CRM_Gmailconnect_Page_Endpoint extends CRM_Core_Page {
   }
 
   /**
+   * Gmail add-on expects status code so always return status code and body
+   *
    * @return array [HTTP status, response body]
    */
   private function handle(): array {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-      return [405, ['error' => 'Use POST.']];
+    $token = $_SERVER['HTTP_X_GMAIL_CONNECT_TOKEN'] ?? $_GET['token'] ?? '';
+
+    if (empty($token)) {
+      return [401, ['error' => 'Invalid token.']];
     }
 
-    $token = $_SERVER['HTTP_X_GMAIL_CONNECT_TOKEN'] ?? $_GET['token'] ?? '';
     $contactId = Helper::findContactIdByToken($token);
     if (!$contactId) {
       return [401, ['error' => 'Invalid token.']];
     }
+
     if (!CRM_Core_BAO_UFMatch::getUFId($contactId) || !CRM_Core_Permission::check('access Gmail Connect endpoints', $contactId)) {
       return [403, ['error' => 'You do not have permission to use Gmail Connect.']];
     }
@@ -52,21 +52,12 @@ class CRM_Gmailconnect_Page_Endpoint extends CRM_Core_Page {
       $params['checkPermissions'] = FALSE;
       return [200, ['values' => civicrm_api4('GmailConnect', $action, $params)->getArrayCopy()]];
     }
-    catch (\Civi\Core\Exception\DBQueryException $e) {
-      return $this->serverError($e);
-    }
     catch (CRM_Core_Exception $e) {
       return [400, ['error' => $e->getMessage()]];
     }
     catch (\Throwable $e) {
-      return $this->serverError($e);
+      return [500, ['error' => "Sorry, an error occurred please contact your CiviCRM adminstrator."]];
     }
-  }
-
-  private function serverError(\Throwable $e): array {
-    $errorId = CRM_Core_Error::createErrorId();
-    Civi::log()->error("Gmail Connect endpoint error ($errorId): " . $e->getMessage(), ['exception' => $e]);
-    return [500, ['error' => "Sorry, an error occurred (Error ID: $errorId)."]];
   }
 
 }

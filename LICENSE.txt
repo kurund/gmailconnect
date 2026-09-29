@@ -1,5 +1,5 @@
 Package: gmailconnect
-Copyright (C) 2026, FIXME <FIXME>
+Copyright (C) 2026, Third Sector Design<info@thirdsectordesign.org>
 Licensed under the GNU Affero Public License 3.0 (below).
 
 -------------------------------------------------------------------------------

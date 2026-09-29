@@ -1,5 +1,5 @@
 <div class="crm-block crm-form-block">
-  <p>{ts}Copy this URL into the CiviCRM Connect Gmail add-on. It is personal to you: anyone who has it can look up contacts and record emails in CiviCRM as you, so don't share it.{/ts}</p>
+  <p class="help">{ts}Copy this URL into the CiviCRM Connect Gmail add-on. It is personal to you: anyone who has it can look up contacts and record emails in CiviCRM as you, so don't share it.{/ts}</p>
   <div class="crm-section">
     <div class="label"><label for="gmailconnect-url">{ts}Your Gmail Connect URL{/ts}</label></div>
     <div class="content">
