@@ -1,3 +1,4 @@
+**Moved to https://lab.civicrm.org/extensions/gmailconnect**
 # gmailconnect
 
 Gmail integration for CiviCRM
